@@ -151,9 +151,6 @@ This script:
 - Pull-to-Refresh
 - Loading States
 
-## 🧪 Testing
-
-(TODO: Add testing documentation)
 
 ## 📦 Dependencies
 
