@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import '../network/network_info.dart';
+import '../../features/users/data/datasources/user_local_data_source.dart';
 import '../../features/users/data/datasources/user_remote_data_source.dart';
+import '../../features/users/data/local/database.dart';
 import '../../features/users/data/repositories/user_repository_impl.dart';
 import '../../features/users/domain/repositories/user_repository.dart';
 import '../../features/users/domain/usecases/get_user.dart';
@@ -29,6 +31,7 @@ Future<void> init() async {
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(
       remoteDataSource: sl(),
+      localDataSource: sl(),
       networkInfo: sl(),
     ),
   );
@@ -37,6 +40,13 @@ Future<void> init() async {
   sl.registerLazySingleton<UserRemoteDataSource>(
     () => UserRemoteDataSourceImpl(client: sl()),
   );
+
+  sl.registerLazySingleton<UserLocalDataSource>(
+    () => UserLocalDataSourceImpl(database: sl()),
+  );
+
+  // Database
+  sl.registerLazySingleton(() => AppDatabase());
 
   //! Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());

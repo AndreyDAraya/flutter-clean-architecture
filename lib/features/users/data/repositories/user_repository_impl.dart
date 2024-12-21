@@ -4,14 +4,17 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../datasources/user_local_data_source.dart';
 import '../datasources/user_remote_data_source.dart';
 
 class UserRepositoryImpl implements UserRepository {
   final UserRemoteDataSource remoteDataSource;
+  final UserLocalDataSource localDataSource;
   final NetworkInfo networkInfo;
 
   UserRepositoryImpl({
     required this.remoteDataSource,
+    required this.localDataSource,
     required this.networkInfo,
   });
 
@@ -20,14 +23,23 @@ class UserRepositoryImpl implements UserRepository {
     if (await networkInfo.isConnected) {
       try {
         final remoteUsers = await remoteDataSource.getUsers();
+        await localDataSource.cacheUsers(remoteUsers);
         return Right(remoteUsers);
       } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message, code: e.code));
-      } catch (e) {
-        return const Left(ServerFailure(message: 'Error inesperado'));
+        try {
+          final localUsers = await localDataSource.getCachedUsers();
+          return Right(localUsers);
+        } on CacheException catch (e) {
+          return Left(CacheFailure(message: e.message));
+        }
       }
     } else {
-      return const Left(NetworkFailure(message: 'No hay conexión a internet'));
+      try {
+        final localUsers = await localDataSource.getCachedUsers();
+        return Right(localUsers);
+      } on CacheException catch (e) {
+        return Left(CacheFailure(message: e.message));
+      }
     }
   }
 
@@ -36,14 +48,23 @@ class UserRepositoryImpl implements UserRepository {
     if (await networkInfo.isConnected) {
       try {
         final remoteUser = await remoteDataSource.getUser(id);
+        await localDataSource.cacheUser(remoteUser);
         return Right(remoteUser);
       } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message, code: e.code));
-      } catch (e) {
-        return const Left(ServerFailure(message: 'Error inesperado'));
+        try {
+          final localUser = await localDataSource.getCachedUser(id);
+          return Right(localUser);
+        } on CacheException catch (e) {
+          return Left(CacheFailure(message: e.message));
+        }
       }
     } else {
-      return const Left(NetworkFailure(message: 'No hay conexión a internet'));
+      try {
+        final localUser = await localDataSource.getCachedUser(id);
+        return Right(localUser);
+      } on CacheException catch (e) {
+        return Left(CacheFailure(message: e.message));
+      }
     }
   }
 }
