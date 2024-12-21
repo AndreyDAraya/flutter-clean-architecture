@@ -87,7 +87,7 @@ lib/
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/flutter-clean-architecture.git
+git clone https://github.com/AndreyDAraya/flutter-clean-architecture.git
 cd flutter-clean-architecture
 ```
 
